@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PDF Question Answering</title>
+  <style>
+    body{font-family:sans-serif;background:#f9fafb;margin:0;padding:20px}
+    .card{max-width:700px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    h1{margin:0 0 10px}
+    textarea{width:100%;min-height:80px;margin:10px 0;padding:10px;border-radius:8px;border:1px solid #ccc}
+    .btn{padding:10px 15px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer}
+    .answer{margin-top:15px;padding:15px;border-radius:8px;background:#f1f5f9;min-height:50px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>PDF Q&A</h1>
+    <input type="file" id="fileInput" multiple accept="application/pdf"/>
+    <button class="btn" onclick="uploadFiles()">Upload PDFs</button>
+    <textarea id="question" placeholder="Ask a question..."></textarea>
+    <button class="btn" onclick="askQuestion()">Ask</button>
+    <div class="answer" id="answerBox">Answer will appear here...</div>
+  </div>
+
+  <script>
+    async function uploadFiles(){
+      const input = document.getElementById('fileInput');
+      if(input.files.length === 0){ alert("No files selected"); return; }
+      const form = new FormData();
+      for(const f of input.files){ form.append("files", f); }
+
+      const res = await fetch("http://localhost:8000/api/upload", {
+        method: "POST",
+        body: form
+      });
+      const data = await res.json();
+      alert("Uploaded " + data.count + " file(s)");
+    }
+
+    async function askQuestion(){
+      const q = document.getElementById('question').value;
+      if(!q){ alert("Enter a question"); return; }
+      document.getElementById('answerBox').innerText = "Thinking...";
+
+      const res = await fetch("http://localhost:8000/api/ask", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({question: q})
+      });
+      const data = await res.json();
+      document.getElementById('answerBox').innerText = data.answer;
+    }
+  </script>
+</body>
+</html>
